@@ -206,6 +206,6 @@ func (b *DatabaseBuilder) IdentifierGenerator(generator IdentifierGenerator) *Da
 	return b
 }
 
-func (b *DatabaseBuilder) build() (*Database, error) {
+func (b *DatabaseBuilder) Build() (*Database, error) {
 	return newDatabaseFromBuilder(b)
 }
