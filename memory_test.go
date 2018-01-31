@@ -11,6 +11,99 @@ func TestComplyToInterface(t *testing.T) {
 	var _ dao.DAO = &dao.Memory{}
 }
 
+func TestGetAllEntities(t *testing.T) {
+	testcases := []struct{
+		Name string
+		Pagination dao.Pagination
+		Content []dao.IdentifiableEntity
+		Expected []dao.IdentifiableEntity
+	}{
+		{
+			Name:"Empty DAO",
+			Pagination: dao.Pagination{},
+			Content: []dao.IdentifiableEntity{},
+			Expected: []dao.IdentifiableEntity{},
+		},
+		{
+			Name:"Default Pagination",
+			Pagination: dao.Pagination{},
+			Content: []dao.IdentifiableEntity{
+				TestEntity{TestIdentifier(1)},
+				TestEntity{TestIdentifier(2)},
+				TestEntity{TestIdentifier(3)},
+			},
+			Expected: []dao.IdentifiableEntity{
+				TestEntity{TestIdentifier(1)},
+				TestEntity{TestIdentifier(2)},
+				TestEntity{TestIdentifier(3)},
+			},
+		},
+		{
+			Name:"With Offset",
+			Pagination: dao.Pagination{}.WithOffset(1),
+			Content: []dao.IdentifiableEntity{
+				TestEntity{TestIdentifier(1)},
+				TestEntity{TestIdentifier(2)},
+				TestEntity{TestIdentifier(3)},
+			},
+			Expected: []dao.IdentifiableEntity{
+				TestEntity{TestIdentifier(2)},
+				TestEntity{TestIdentifier(3)},
+			},
+		},
+		{
+			Name:"With Limit",
+			Pagination: dao.Pagination{}.WithLimit(2),
+			Content: []dao.IdentifiableEntity{
+				TestEntity{TestIdentifier(1)},
+				TestEntity{TestIdentifier(2)},
+				TestEntity{TestIdentifier(3)},
+			},
+			Expected: []dao.IdentifiableEntity{
+				TestEntity{TestIdentifier(1)},
+				TestEntity{TestIdentifier(2)},
+			},
+		},
+		{
+			Name:"With Offset & Limit",
+			Pagination: dao.Pagination{}.WithOffset(1).WithLimit(1),
+			Content: []dao.IdentifiableEntity{
+				TestEntity{TestIdentifier(1)},
+				TestEntity{TestIdentifier(2)},
+				TestEntity{TestIdentifier(3)},
+			},
+			Expected: []dao.IdentifiableEntity{
+				TestEntity{TestIdentifier(2)},
+			},
+		},
+	}
+	for _, testdata := range testcases {
+		t.Run(testdata.Name, func(t *testing.T) {
+			memoryDAO := dao.NewMemory(nil)
+			for _, entity := range testdata.Content {
+				if _, err := memoryDAO.Set(entity); nil != err {
+					t.Fatalf("inserting %+v: %s", entity, err.Error())
+				}
+			}
+
+			entities, err := memoryDAO.GetAllEntities(testdata.Pagination)
+			if err != nil {
+				t.Fatalf("loading entities: %s", err.Error())
+			}
+
+			if len(testdata.Expected) != len(entities) {
+				t.Fatalf("Expected (%d) & Loaded (%d) entities doesn't have the same number of entities", len(testdata.Expected), len(entities))
+			}
+
+			for i, expected := range testdata.Expected {
+				if expected != entities[i] {
+					t.Errorf("Expected (%+v) & Loaded (%+v) entities doesn't match (Index: %d)", expected, entities[i], i)
+				}
+			}
+		})
+	}
+}
+
 func TestDelete(t *testing.T) {
 	testcases := []struct{
 		Name string

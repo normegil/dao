@@ -3,6 +3,7 @@ package dao
 import (
 	"github.com/pkg/errors"
 	"fmt"
+	"math"
 )
 
 type Memory struct {
@@ -23,6 +24,9 @@ func NewMemory(generator IdentifierGenerator) *Memory {
 func (d Memory) GetAllEntities(pagination Pagination) ([]Entity, error) {
 	start := pagination.offset
 	end := pagination.offset + pagination.limit
+	if 0 == pagination.limit {
+		end = math.MaxInt64
+	}
 	if int64(len(d.store)) < end {
 		end = int64(len(d.store))
 	}
