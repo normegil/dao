@@ -54,7 +54,7 @@ func (d Memory) Get(id Identifier) (Entity, error)                 {
 	return entity, err
 }
 
-func (d Memory) Set(entity IdentifiableEntity) (Identifier, error) {
+func (d *Memory) Set(entity IdentifiableEntity) (Identifier, error) {
 	var index int
 		var foundEntity Entity
 	if nil == entity.ID() {
@@ -96,11 +96,17 @@ func (d Memory) search(id Identifier) (int, Entity, error) {
 	return 0, nil, nil
 }
 
-func (d Memory) Delete(id Identifier) error                        {
+func (d *Memory) Delete(id Identifier) error                        {
 	index, _, err := d.search(id)
 	if err != nil {
 		return errors.Wrapf(err, "deleting '%+v'", id)
 	}
-	d.store = append(d.store[0:index], d.store[index+1:])
+
+	if index+1 < len(d.store) {
+		d.store = append(d.store[0:index], d.store[index+1:]...)
+	} else {
+		d.store = d.store[0:index]
+	}
+
 	return nil
 }
